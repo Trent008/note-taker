@@ -1,7 +1,31 @@
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import subprocess
 import curses
+import shutil
+
+def find_last_existing_file():
+    current_date = datetime.now()
+    # Start searching from the previous day
+    search_date = current_date - timedelta(days=1)
+
+    while True:
+        year = search_date.year
+        month = search_date.month
+        day = search_date.day
+
+        last_file_path = os.path.join(os.path.expanduser("~"), "notes", str(year), str(month), f"{day}.txt")
+        if os.path.exists(last_file_path):
+            return last_file_path
+        
+        # Move one day back
+        search_date -= timedelta(days=1)
+        
+        # Stop searching after one year
+        if search_date.year < current_date.year - 1:
+            break
+    
+    return None
 
 def open_daily_notes():
     current_date = datetime.now()
@@ -23,9 +47,21 @@ def open_daily_notes():
     filename = f"{day}.txt"
     file_path = os.path.join(directory, filename)
     
+    # Check if the file already exists
+    if not os.path.exists(file_path):
+        last_file_path = find_last_existing_file()
+        if last_file_path:
+            # Copy the contents of the last existing file to the new file
+            shutil.copy(last_file_path, file_path)
+            print(f"Copied contents from '{last_file_path}' to '{file_path}'.")
+        else:
+            # Create a new empty file
+            open(file_path, 'w').close()
+            print(f"Created new empty file '{file_path}'.")
+    
     # Open the file with nano
     try:
-        subprocess.run(["nano", file_path])
+        subprocess.run(["notepad", file_path])
         print(f"Opening '{file_path}' in nano.")
     except FileNotFoundError:
         print("Nano not found. Make sure it is installed.")
@@ -42,7 +78,7 @@ def open_notes_path():
     else:
         print(f"Directory '{directory}' already exists.")
 
-    # attempt to open the notes directory in explorer
+    # Attempt to open the notes directory in explorer
     try:
         subprocess.call(["explorer", directory])
     except FileNotFoundError:
@@ -51,7 +87,7 @@ def open_notes_path():
 
 def main(stdscr):
     # Clear screen and initialize
-    stdscr.clear
+    stdscr.clear()
     curses.curs_set(0)  # Hide the cursor
     stdscr.nodelay(1)   # Non-blocking input
     stdscr.timeout(100) # Set a timeout for input
