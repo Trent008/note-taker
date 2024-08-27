@@ -1,4 +1,5 @@
 import os
+import time
 from datetime import datetime, timedelta
 import subprocess
 import curses
@@ -14,7 +15,7 @@ def find_last_existing_file():
         month = search_date.month
         day = search_date.day
 
-        last_file_path = os.path.join(os.path.expanduser("~"), "notes", str(year), str(month), f"{day}.txt")
+        last_file_path = os.path.join(os.path.expanduser("~"), "notes", str(year), f"{month}-{day}.txt")
         if os.path.exists(last_file_path):
             return last_file_path
         
@@ -27,14 +28,14 @@ def find_last_existing_file():
     
     return None
 
-def open_daily_notes():
+def open_todays_notes():
     current_date = datetime.now()
     year = current_date.year
     month = current_date.month
     day = current_date.day
 
     # Create the directory structure based on the current date
-    directory = os.path.join(os.path.expanduser("~"), "notes", str(year), str(month))
+    directory = os.path.join(os.path.expanduser("~"), "notes", str(year))
     
     # Ensure the directory exists
     if not os.path.exists(directory):
@@ -44,7 +45,7 @@ def open_daily_notes():
         print(f"Directory '{directory}' already exists.")
     
     # File name based on the current day
-    filename = f"{day}.txt"
+    filename = f"{month}-{day}.txt"
     file_path = os.path.join(directory, filename)
     
     # Check if the file already exists
@@ -62,7 +63,7 @@ def open_daily_notes():
     # Open the file with nano
     try:
         subprocess.run(["notepad", file_path])
-        print(f"Opening '{file_path}' in nano.")
+        print(f"Opening '{file_path}' in notepad.")
     except FileNotFoundError:
         print("Nano not found. Make sure it is installed.")
     return "opened daily notes"
@@ -93,8 +94,8 @@ def main(stdscr):
     stdscr.timeout(100) # Set a timeout for input
 
     # Menu options
-    options = ["Open Daily Notes", "Open Notes Path", "Exit"]
-    functions = [open_daily_notes, open_notes_path, None]
+    options = ["Open Today's Notes", "Open File Location", "Exit"]
+    functions = [open_todays_notes, open_notes_path, None]
     
     current_selection = 0
 
